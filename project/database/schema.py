@@ -5,6 +5,7 @@ from postgrest.exceptions import APIError
 from supabase import Client
 
 from config import SUPABASE_DB_URL
+from sync.registry import ENTITY_SYNC_CONFIGS
 
 SQL_DIR = Path(__file__).parent / "sql"
 
@@ -15,10 +16,6 @@ def _read_sql(filename: str) -> str:
 
 def _split_sql_statements(sql: str) -> list[str]:
     return [statement.strip() for statement in sql.split(";") if statement.strip()]
-
-
-QBO_CUSTOMERS_CREATE_SQL = _read_sql("qbo_customers.sql")
-QBO_CUSTOMERS_CREATE_STATEMENTS = _split_sql_statements(QBO_CUSTOMERS_CREATE_SQL)
 
 
 def _execute_with_psycopg(statements: list[str]) -> None:
@@ -42,22 +39,28 @@ def _execute_with_rpc(supabase_client: Client, statements: list[str]) -> None:
     except APIError as error:
         if error.code == "PGRST202":
             raise ValueError(
-                "Could not create qbo_customers table automatically. Either:\n"
+                "Could not create QBO tables automatically. Either:\n"
                 "1. Add SUPABASE_DB_URL to .env (Supabase Settings > Database > Connection string), or\n"
                 "2. Run database/sql/bootstrap_exec_sql.sql once in the Supabase SQL editor, then rerun."
             ) from error
         raise
 
 
-def ensure_qbo_customers_table(supabase_client: Client | None = None) -> None:
+def _ensure_table(sql_file: str, supabase_client: Client | None = None) -> None:
+    statements = _split_sql_statements(_read_sql(sql_file))
+
     if SUPABASE_DB_URL:
-        _execute_with_psycopg(QBO_CUSTOMERS_CREATE_STATEMENTS)
+        _execute_with_psycopg(statements)
     elif supabase_client is not None:
-        _execute_with_rpc(supabase_client, QBO_CUSTOMERS_CREATE_STATEMENTS)
+        _execute_with_rpc(supabase_client, statements)
     else:
         raise ValueError(
             "Set SUPABASE_DB_URL or create the public.exec_sql RPC function "
             "and pass a Supabase client to create tables."
         )
 
-    print("Ensured qbo_customers table exists")
+
+def ensure_all_qbo_tables(supabase_client: Client | None = None) -> None:
+    for config in ENTITY_SYNC_CONFIGS:
+        _ensure_table(config.sql_file, supabase_client=supabase_client)
+        print(f"Ensured {config.table} table exists")
