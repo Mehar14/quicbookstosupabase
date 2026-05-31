@@ -3,3 +3,4 @@ intuit-oauth
 python-quickbooks
 supabase
 psycopg2-binary
+flask
