@@ -18,4 +18,11 @@ def get_auth_client() -> AuthClient:
 
     auth_client.refresh(refresh_token=QBO_REFRESH_TOKEN)
 
+    print('refresh token', QBO_REFRESH_TOKEN)
+    print('client id', QBO_CLIENT_ID)
+    print('client secret', QBO_CLIENT_SECRET)
+    print('redirect uri', QBO_REDIRECT_URI)
+    print('environment', "sandbox")
+    print('auth client', auth_client)
+
     return auth_client

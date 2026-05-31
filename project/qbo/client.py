@@ -1,7 +1,7 @@
 from quickbooks import QuickBooks
 
 from config import QBO_COMPANY_ID
-from authorization import get_auth_client
+from qbo.authorization import get_auth_client
 
 
 def get_qbo_client() -> QuickBooks:
