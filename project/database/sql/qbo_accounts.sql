@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS public.qbo_accounts (
+    qbo_id TEXT PRIMARY KEY,
+    sync_token TEXT,
+    name TEXT,
+    fully_qualified_name TEXT,
+    active BOOLEAN,
+    sub_account BOOLEAN,
+    classification TEXT,
+    account_type TEXT,
+    account_sub_type TEXT,
+    description TEXT,
+    acct_num TEXT,
+    current_balance NUMERIC(15, 2),
+    current_balance_with_sub_accounts NUMERIC(15, 2),
+    currency_code TEXT,
+    currency_name TEXT,
+    parent_ref TEXT,
+    tax_code_ref TEXT,
+    qbo_created_at TIMESTAMPTZ,
+    qbo_updated_at TIMESTAMPTZ,
+    synced_at TIMESTAMPTZ DEFAULT NOW(),
+    raw_data JSONB
+);
