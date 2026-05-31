@@ -10,6 +10,7 @@ QBO_COMPANY_ID = os.getenv("QBO_COMPANY_ID")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_DB_URL = os.getenv("SUPABASE_DB_URL")
 
 QBO_REDIRECT_URI = (
     "https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl"

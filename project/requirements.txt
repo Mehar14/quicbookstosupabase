@@ -1,0 +1,5 @@
+python-dotenv
+intuit-oauth
+python-quickbooks
+supabase
+psycopg2-binary
