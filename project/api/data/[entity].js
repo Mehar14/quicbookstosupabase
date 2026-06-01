@@ -2,7 +2,7 @@ const { createClient } = require("@supabase/supabase-js");
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 function toLabel(tableName) {
@@ -19,29 +19,22 @@ module.exports = async function handler(req, res) {
   const { entity } = req.query;
 
   try {
-    const { data: tables, error: schemaError } = await supabase
-      .from("information_schema.tables")
-      .select("table_name")
-      .eq("table_schema", "public")
-      .eq("table_type", "BASE TABLE")
-      .eq("table_name", entity)
-      .single();
+    // Validate table exists
+    const { data: tables, error: tableError } = await supabase.rpc("get_public_tables");
+    if (tableError) throw tableError;
 
-    if (schemaError || !tables) {
+    const exists = (tables ?? []).some((r) => r.table_name === entity);
+    if (!exists) {
       return res.status(404).json({ error: `Unknown entity: "${entity}"` });
     }
 
-    const { data: columnRows, error: colError } = await supabase
-      .from("information_schema.columns")
-      .select("column_name, ordinal_position")
-      .eq("table_schema", "public")
-      .eq("table_name", entity)
-      .order("ordinal_position");
-
+    // Get columns in order
+    const { data: cols, error: colError } = await supabase.rpc("get_table_columns", { target_table: entity });
     if (colError) throw colError;
 
-    const columns = (columnRows ?? []).map((r) => r.column_name);
+    const columns = (cols ?? []).map((r) => r.column_name);
 
+    // Fetch rows
     const { data, error: dataError } = await supabase
       .from(entity)
       .select("*")

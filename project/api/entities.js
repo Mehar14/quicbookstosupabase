@@ -1,11 +1,8 @@
 const { createClient } = require("@supabase/supabase-js");
 
-console.log("URL:", process.env.SUPABASE_URL);
-console.log("KEY:", process.env.SUPABASE_KEY ? "present" : "missing");
-
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 function toLabel(tableName) {
@@ -20,12 +17,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { data: tables, error } = await supabase
-      .from("information_schema.tables")
-      .select("table_name")
-      .eq("table_schema", "public")
-      .eq("table_type", "BASE TABLE")
-      .order("table_name");
+    const { data: tables, error } = await supabase.rpc("get_public_tables");
 
     if (error) throw error;
 
