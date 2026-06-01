@@ -1,11 +1,11 @@
 const { createClient } = require("@supabase/supabase-js");
 
 console.log("URL:", process.env.SUPABASE_URL);
-console.log("KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "present" : "missing");
+console.log("KEY:", process.env.SUPABASE_KEY ? "present" : "missing");
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_KEY
 );
 
 function toLabel(tableName) {
