@@ -5,8 +5,12 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
+function stripPrefix(tableName) {
+  return tableName.replace(/^qbo_/, "");
+}
+
 function toLabel(tableName) {
-  return tableName
+  return stripPrefix(tableName)
     .replace(/_/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -16,35 +20,37 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { entity } = req.query;
+  const { entity } = req.query; // e.g. "accounts"
 
   try {
-    // Validate table exists
+    // Get all tables and find the one whose stripped name matches
     const { data: tables, error: tableError } = await supabase.rpc("get_public_tables");
     if (tableError) throw tableError;
 
-    const exists = (tables ?? []).some((r) => r.table_name === entity);
-    if (!exists) {
+    const match = (tables ?? []).find((r) => stripPrefix(r.table_name) === entity);
+    if (!match) {
       return res.status(404).json({ error: `Unknown entity: "${entity}"` });
     }
 
+    const realTable = match.table_name; // e.g. "qbo_accounts"
+
     // Get columns in order
-    const { data: cols, error: colError } = await supabase.rpc("get_table_columns", { target_table: entity });
+    const { data: cols, error: colError } = await supabase.rpc("get_table_columns", { target_table: realTable });
     if (colError) throw colError;
 
     const columns = (cols ?? []).map((r) => r.column_name);
 
-    // Fetch rows
+    // Fetch rows from the real table name
     const { data, error: dataError } = await supabase
-      .from(entity)
+      .from(realTable)
       .select("*")
       .order("id", { ascending: true });
 
     if (dataError) throw dataError;
 
     return res.status(200).json({
-      label:   toLabel(entity),
-      table:   entity,
+      label:   toLabel(realTable),
+      table:   realTable,
       columns,
       rows:    data ?? [],
     });

@@ -5,8 +5,12 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
+function stripPrefix(tableName) {
+  return tableName.replace(/^qbo_/, "");
+}
+
 function toLabel(tableName) {
-  return tableName
+  return stripPrefix(tableName)
     .replace(/_/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -28,9 +32,9 @@ module.exports = async function handler(req, res) {
           .select("*", { count: "exact", head: true });
 
         return {
-          name:  table_name,
-          label: toLabel(table_name),
-          table: table_name,
+          name:  stripPrefix(table_name), // "accounts" not "qbo_accounts"
+          label: toLabel(table_name),      // "Accounts"
+          table: table_name,               // "qbo_accounts" — actual Supabase table
           count: count ?? 0,
         };
       })
