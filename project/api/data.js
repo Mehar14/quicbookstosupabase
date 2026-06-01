@@ -21,7 +21,6 @@ module.exports = async function handler(req, res) {
   }
 
   const { entity } = req.query;
-  console.log("[data] entity:", entity);
 
   if (!entity) {
     return res.status(400).json({ error: "Missing entity query parameter" });
@@ -30,31 +29,35 @@ module.exports = async function handler(req, res) {
   try {
     // Step 1: get all tables
     const { data: tables, error: tableError } = await supabase.rpc("get_public_tables");
-    console.log("[data] tables:", JSON.stringify(tables), "error:", tableError);
     if (tableError) throw tableError;
 
     // Step 2: find matching table by stripped name
     const match = (tables ?? []).find((r) => stripPrefix(r.table_name) === entity);
-    console.log("[data] match:", match);
     if (!match) {
       return res.status(404).json({ error: `Unknown entity: "${entity}"` });
     }
 
     const realTable = match.table_name;
 
-    // Step 3: get columns
-    const { data: cols, error: colError } = await supabase.rpc("get_table_columns", { target_table: realTable });
-    console.log("[data] columns:", JSON.stringify(cols), "error:", colError);
-    if (colError) throw colError;
+    // Step 3: get columns and primary key in parallel
+    const [colsRes, pkRes] = await Promise.all([
+      supabase.rpc("get_table_columns", { target_table: realTable }),
+      supabase.rpc("get_table_primary_key", { target_table: realTable }),
+    ]);
 
-    const columns = (cols ?? []).map((r) => r.column_name);
+    if (colsRes.error) throw colsRes.error;
+    if (pkRes.error) throw pkRes.error;
 
-    // Step 4: fetch rows
+    const columns  = (colsRes.data ?? []).map((r) => r.column_name);
+    const orderCol = pkRes.data || columns[0]; // fall back to first column if no PK
+    console.log("[data] ordering by primary key:", orderCol);
+
+    // Step 4: fetch rows ordered by primary key
     const { data, error: dataError } = await supabase
       .from(realTable)
       .select("*")
-      .order("qbo_id", { ascending: true });
-    console.log("[data] rows:", data?.length ?? 0, "error:", dataError);
+      .order(orderCol, { ascending: true });
+
     if (dataError) throw dataError;
 
     return res.status(200).json({
