@@ -44,6 +44,9 @@ def index():
 
 @app.get("/<path:filename>")
 def static_files(filename):
+    if filename.startswith("api/"):
+        return jsonify({"error": "Not found"}), 404
+
     if (WEB_DIR / filename).exists():
         return send_from_directory(WEB_DIR, filename)
     return jsonify({"error": "Not found"}), 404

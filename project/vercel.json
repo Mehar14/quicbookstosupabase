@@ -1,19 +1,18 @@
 {
-  "version": 2,
-  "builds": [
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "mkdir -p public && cp -r web/. public/",
+  "rewrites": [
     {
-      "src": "server.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
+    },
     {
-      "src": "/(.*)",
-      "dest": "server.py"
+      "source": "/api",
+      "destination": "/api/index.py"
     }
   ],
   "functions": {
-    "server.py": {
+    "api/index.py": {
       "maxDuration": 60
     }
   }
