@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+const { createClient } = require("@supabase/supabase-js");
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -11,7 +11,7 @@ function toLabel(tableName) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -19,7 +19,6 @@ export default async function handler(req, res) {
   const { entity } = req.query;
 
   try {
-    // Validate the table exists in the public schema
     const { data: tables, error: schemaError } = await supabase
       .from("information_schema.tables")
       .select("table_name")
@@ -32,7 +31,6 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: `Unknown entity: "${entity}"` });
     }
 
-    // Auto-discover columns for this table
     const { data: columnRows, error: colError } = await supabase
       .from("information_schema.columns")
       .select("column_name, ordinal_position")
@@ -44,7 +42,6 @@ export default async function handler(req, res) {
 
     const columns = (columnRows ?? []).map((r) => r.column_name);
 
-    // Fetch all rows
     const { data, error: dataError } = await supabase
       .from(entity)
       .select("*")
@@ -62,4 +59,4 @@ export default async function handler(req, res) {
     console.error(`[/api/data/${entity}]`, err);
     return res.status(500).json({ error: err.message || "Internal server error" });
   }
-}
+};
