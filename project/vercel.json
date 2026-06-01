@@ -1,18 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "mkdir -p public && cp -r web/. public/",
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
-    },
-    {
-      "source": "/api",
-      "destination": "/api/index.py"
-    }
-  ],
   "functions": {
-    "api/index.py": {
+    "server.py": {
       "maxDuration": 60
     }
   }

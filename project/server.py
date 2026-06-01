@@ -34,22 +34,12 @@ def get_entity_config(name: str):
     return None
 
 
-app = Flask(__name__, static_folder=str(WEB_DIR), static_url_path="")
+app = Flask(__name__)
 
 
-@app.get("/")
-def index():
-    return send_from_directory(WEB_DIR, "index.html")
-
-
-@app.get("/<path:filename>")
-def static_files(filename):
-    if filename.startswith("api/"):
-        return jsonify({"error": "Not found"}), 404
-
-    if (WEB_DIR / filename).exists():
-        return send_from_directory(WEB_DIR, filename)
-    return jsonify({"error": "Not found"}), 404
+@app.get("/api/health")
+def health():
+    return jsonify({"status": "ok"})
 
 
 @app.get("/api/entities")
@@ -145,6 +135,22 @@ def refresh_data():
             "status": "error",
             "message": str(error),
         }), 500
+
+
+# Local development only — on Vercel, static files are served from public/
+@app.get("/")
+def index():
+    return send_from_directory(WEB_DIR, "index.html")
+
+
+@app.get("/<path:filename>")
+def static_files(filename):
+    if filename.startswith("api/"):
+        return jsonify({"error": "Not found"}), 404
+
+    if (WEB_DIR / filename).exists():
+        return send_from_directory(WEB_DIR, filename)
+    return jsonify({"error": "Not found"}), 404
 
 
 if __name__ == "__main__":
