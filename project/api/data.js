@@ -53,7 +53,7 @@ module.exports = async function handler(req, res) {
     const { data, error: dataError } = await supabase
       .from(realTable)
       .select("*")
-      .order("id", { ascending: true });
+      .order("qbo_id", { ascending: true });
     console.log("[data] rows:", data?.length ?? 0, "error:", dataError);
     if (dataError) throw dataError;
 
