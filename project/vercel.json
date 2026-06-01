@@ -1,9 +1,3 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "mkdir -p public && cp -r web/. public/",
-  "functions": {
-    "server.py": {
-      "maxDuration": 60
-    }
-  }
+  "$schema": "https://openapi.vercel.sh/vercel.json"
 }
