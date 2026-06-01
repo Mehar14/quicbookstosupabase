@@ -215,7 +215,7 @@ async function loadEntityData(entityName) {
   emptyState.classList.add("hidden");
 
   try {
-    const response = await fetch(`/api/data/${entityName}`);
+    const response = await fetch(`/api/data?entity=${entityName}`);;
     const payload = await parseJsonResponse(response);
     if (!response.ok) {
       throw new Error(payload.message || payload.error || "Failed to load entity data");
